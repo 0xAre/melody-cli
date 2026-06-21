@@ -28,6 +28,7 @@ dependencies = [
     "yt-dlp>=2024.1",
     "platformdirs>=4.0",
     "tomli-w>=1.0",
+    "questionary>=2.0",
 ]
 
 [project.optional-dependencies]
