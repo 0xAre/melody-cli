@@ -121,8 +121,13 @@ def banner():
 
     grid.add_row(left, right)
 
+    footer = Align.center(
+        Text("Any issues? github.com/0xAre/melody-cli/issues", style="dim"),
+        pad=False,
+    )
+
     console.print(Panel(
-        RichGroup(Text(""), logo_widget, sub_widget, Text(""), grid),
+        RichGroup(Text(""), logo_widget, sub_widget, Text(""), grid, footer, Text("")),
         border_style="cyan",
         padding=(0, 1),
     ))
