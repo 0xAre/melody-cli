@@ -3,14 +3,13 @@ Interactive wizard — default mode ketika `melody` dijalankan tanpa argumen.
 Navigasi dengan arrow keys, tidak perlu hafal command apapun.
 """
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import questionary
 from rich.console import Console
 from rich.panel import Panel
-from rich.rule import Rule
 from rich.table import Table
-from rich.text import Text
 
 from melody import __version__
 from melody.services import config_service
@@ -38,12 +37,20 @@ QUALITY_CHOICES = [
 ]
 
 
+# ── Queue state (per sesi) ───────────────────────────────────────
+
+@dataclass
+class QueueItem:
+    video_id: str
+    title: str
+    channel: str
+    duration_str: str
+    url: str
+
+_QUEUE: list[QueueItem] = []
+
+
 # ── Helpers ─────────────────────────────────────────────────────
-
-def _q(result):
-    """Return None kalau user Ctrl+C, else return result."""
-    return result
-
 
 def banner():
     console.print(Panel(
@@ -56,7 +63,6 @@ def banner():
 
 
 def _ask_quality(default: str = "192") -> str | None:
-    # Pindah default ke posisi pertama
     choices = sorted(QUALITY_CHOICES, key=lambda c: (c.value != default, c.value))
     return questionary.select(
         "Kualitas MP3:", choices=choices, style=THEME,
@@ -246,12 +252,38 @@ def _try_drm_fallback(failed_item, all_results: dict, selected: list, out_dir, q
         if r.success:
             _result_ok(r.title, out_dir)
             return
-        # Error lain, stop
         _result_fail(r.error)
         return
 
     console.print("  [yellow]Semua alternatif juga DRM protected.[/yellow]")
     console.print("  [dim]Tip: paste URL YouTube langsung dari browser[/dim]")
+
+
+def _add_search_results_to_queue(selected: list) -> None:
+    """Tambahkan search results yang dipilih ke _QUEUE, skip duplikat."""
+    added = 0
+    dupes = 0
+    existing_ids = {q.video_id for q in _QUEUE}
+    for item in selected:
+        if item.video_id in existing_ids:
+            dupes += 1
+            continue
+        _QUEUE.append(QueueItem(
+            video_id=item.video_id,
+            title=item.title,
+            channel=item.channel,
+            duration_str=item.duration_str,
+            url=item.url,
+        ))
+        existing_ids.add(item.video_id)
+        added += 1
+    console.print(
+        f"  [green]✓[/green] {added} lagu ditambahkan ke antrian  "
+        f"[dim](total: {len(_QUEUE)})[/dim]"
+    )
+    if dupes:
+        console.print(f"  [dim]{dupes} sudah ada di antrian, dilewati[/dim]")
+    console.print(f"  [dim]→ pilih \"Download antrian\" dari menu untuk mulai unduh[/dim]")
 
 
 def flow_search() -> None:
@@ -272,7 +304,6 @@ def flow_search() -> None:
 
     has_drm_hint = any(r.likely_drm for r in results)
 
-    # Tampilkan tabel hasil sebelum checkbox
     t = Table(show_header=True, header_style="bold cyan", border_style="dim", box=None)
     t.add_column("#", width=3, justify="right", style="dim")
     t.add_column("Judul")
@@ -287,7 +318,6 @@ def flow_search() -> None:
         console.print("  [dim yellow][DRM?] = kemungkinan terenkripsi, melody otomatis cari alternatif[/dim yellow]")
     console.print()
 
-    # Checkbox pilih yang mau didownload
     choices = [
         questionary.Choice(
             f"{r.index:2}. {r.title[:48]}  ({r.duration_str})"
@@ -298,7 +328,7 @@ def flow_search() -> None:
     ]
 
     selected = questionary.checkbox(
-        "Pilih lagu yang mau didownload  (spasi = centang, enter = konfirmasi):",
+        "Pilih lagu  (spasi = centang, enter = konfirmasi):",
         choices=choices,
         style=THEME,
     ).ask()
@@ -306,6 +336,25 @@ def flow_search() -> None:
     if not selected:
         return
 
+    # Tanya: tambah ke antrian atau download sekarang
+    n = len(selected)
+    action = questionary.select(
+        f"{n} lagu dipilih — apa yang mau dilakukan?",
+        choices=[
+            questionary.Choice("  Tambah ke antrian  (cari lagi nanti, download sekaligus)", value="queue"),
+            questionary.Choice("  Download sekarang",                                         value="download"),
+        ],
+        style=THEME,
+    ).ask()
+
+    if action is None:
+        return
+
+    if action == "queue":
+        _add_search_results_to_queue(selected)
+        return
+
+    # action == "download" — alur lama
     require_ffmpeg()
 
     cfg = config_service.get_all()
@@ -318,8 +367,6 @@ def flow_search() -> None:
         return
 
     skip = cfg.get("skip_history", True)
-
-    # Buat index hasil search untuk fallback DRM
     all_results_by_idx = {r.index: r for r in results}
     console.print()
 
@@ -332,11 +379,117 @@ def flow_search() -> None:
         elif r.success:
             _result_ok(r.title, out_dir)
         elif r.drm:
-            # Auto-coba video berikutnya dari hasil search yang tidak dipilih
             console.print(f"  [yellow]⊘ DRM protected — otomatis coba alternatif...[/yellow]")
             _try_drm_fallback(item, all_results_by_idx, selected, out_dir, quality, skip)
         else:
             _result_fail(r.error)
+
+
+def flow_queue_view() -> None:
+    """Tampilkan dan kelola antrian download."""
+    if not _QUEUE:
+        console.print("  [dim]Antrian kosong[/dim]")
+        return
+
+    _print_queue_table()
+
+    action = questionary.select(
+        "Aksi:",
+        choices=[
+            questionary.Choice("  Kembali ke menu",       value="back"),
+            questionary.Choice("  Hapus item tertentu",   value="remove"),
+            questionary.Choice("  Bersihkan semua",       value="clear"),
+        ],
+        style=THEME,
+    ).ask()
+
+    if action == "remove":
+        remove_choices = [
+            questionary.Choice(f"  {i}. {item.title[:50]}  ({item.duration_str})", value=item.video_id)
+            for i, item in enumerate(_QUEUE, 1)
+        ]
+        to_remove = questionary.checkbox(
+            "Pilih yang mau dihapus:",
+            choices=remove_choices,
+            style=THEME,
+        ).ask()
+        if to_remove:
+            remove_set = set(to_remove)
+            before = len(_QUEUE)
+            _QUEUE[:] = [q for q in _QUEUE if q.video_id not in remove_set]
+            removed = before - len(_QUEUE)
+            console.print(f"  [yellow]{removed} lagu dihapus dari antrian[/yellow]  [dim](sisa: {len(_QUEUE)})[/dim]")
+
+    elif action == "clear":
+        if questionary.confirm(
+            f"Yakin hapus semua {len(_QUEUE)} lagu dari antrian?",
+            default=False,
+            style=THEME,
+        ).ask():
+            _QUEUE.clear()
+            console.print("  [yellow]Antrian dikosongkan[/yellow]")
+
+
+def flow_download_queue() -> None:
+    """Download semua lagu yang ada di antrian."""
+    if not _QUEUE:
+        console.print("  [yellow]Antrian kosong[/yellow]")
+        return
+
+    from melody.core.downloader import download_one
+    from melody.utils.ffmpeg import require_ffmpeg
+
+    require_ffmpeg()
+
+    _print_queue_table()
+
+    cfg = config_service.get_all()
+    quality = _ask_quality(cfg.get("quality", "192"))
+    if quality is None:
+        return
+
+    out_dir = _ask_output_dir(Path(cfg.get("output_dir", "~/Music")).expanduser())
+    if out_dir is None:
+        return
+
+    skip = cfg.get("skip_history", True)
+    ok = skipped = failed = 0
+    done_ids: set[str] = set()
+
+    console.print()
+    total = len(_QUEUE)
+    for i, item in enumerate(list(_QUEUE), 1):
+        console.print(f"  [dim][{i}/{total}][/dim] [cyan]↓[/cyan] {item.title[:55]}")
+        r = download_one(item.url, out_dir, quality, skip_history=skip)
+
+        if r.skipped:
+            _result_skip()
+            skipped += 1
+            done_ids.add(item.video_id)
+        elif r.success:
+            _result_ok(r.title, out_dir)
+            ok += 1
+            done_ids.add(item.video_id)
+        elif r.drm:
+            console.print("  [yellow]⊘ DRM protected — dilewati[/yellow]")
+            failed += 1
+        else:
+            _result_fail(r.error)
+            failed += 1
+
+    # Hapus item yang berhasil/skip dari antrian; yang gagal tetap
+    _QUEUE[:] = [q for q in _QUEUE if q.video_id not in done_ids]
+
+    console.print(
+        f"\n  [green]Berhasil: {ok}[/green]  "
+        f"[yellow]Dilewati: {skipped}[/yellow]  "
+        f"[red]Gagal: {failed}[/red]"
+    )
+    if not _QUEUE:
+        console.print("  [dim]Antrian selesai[/dim]")
+    else:
+        console.print(f"  [yellow]{len(_QUEUE)} lagu masih di antrian[/yellow]  [dim](DRM / error)[/dim]")
+        console.print("  [dim]→ buka \"Lihat antrian\" untuk hapus secara manual[/dim]")
 
 
 def flow_convert() -> None:
@@ -517,27 +670,64 @@ def flow_settings() -> None:
             console.print(f"  [green]✓[/green] Skip duplikat [bold]{status}[/bold]")
 
 
-# ── Entry point ─────────────────────────────────────────────────
+# ── Queue helpers ────────────────────────────────────────────────
 
-MENU_CHOICES = [
-    questionary.Choice("  Download lagu / playlist dari YouTube", value="download"),
-    questionary.Choice("  Download dari file daftar URL  (.txt)", value="batch"),
-    questionary.Choice("  Cari lagu di YouTube",                  value="search"),
-    questionary.Choice("  Konversi file audio lokal ke MP3",       value="convert"),
-    questionary.Separator(),
-    questionary.Choice("  Riwayat download",                       value="history"),
-    questionary.Choice("  Pengaturan",                             value="settings"),
-    questionary.Separator(),
-    questionary.Choice("  Keluar",                                 value="exit"),
-]
+def _print_queue_table() -> None:
+    n = len(_QUEUE)
+    console.print(f"\n  [bold cyan]Antrian Download[/bold cyan]  [dim]({n} lagu)[/dim]\n")
+    t = Table(show_header=True, header_style="bold cyan", border_style="dim", box=None)
+    t.add_column("#", width=3, justify="right", style="dim")
+    t.add_column("Judul")
+    t.add_column("Channel", style="dim")
+    t.add_column("Durasi", justify="right", style="dim", width=7)
+    for i, item in enumerate(_QUEUE, 1):
+        t.add_row(str(i), item.title[:52], item.channel[:25], item.duration_str)
+    console.print(t)
+    console.print()
+
+
+# ── Menu builder (dinamis berdasarkan isi antrian) ───────────────
+
+def _build_menu() -> list:
+    choices: list = [
+        questionary.Choice("  Download lagu / playlist dari YouTube", value="download"),
+        questionary.Choice("  Download dari file daftar URL  (.txt)", value="batch"),
+        questionary.Choice("  Cari lagu di YouTube",                  value="search"),
+        questionary.Choice("  Konversi file audio lokal ke MP3",       value="convert"),
+    ]
+
+    if _QUEUE:
+        n = len(_QUEUE)
+        choices.append(questionary.Separator())
+        choices.append(questionary.Choice(
+            f"  Antrian [{n} lagu]  —  lihat & kelola",
+            value="queue_view",
+        ))
+        choices.append(questionary.Choice(
+            f"  Download antrian  ({n} lagu)",
+            value="queue_download",
+        ))
+
+    choices += [
+        questionary.Separator(),
+        questionary.Choice("  Riwayat download", value="history"),
+        questionary.Choice("  Pengaturan",       value="settings"),
+        questionary.Separator(),
+        questionary.Choice("  Keluar",           value="exit"),
+    ]
+
+    return choices
+
 
 FLOWS = {
-    "download": flow_download,
-    "batch":    flow_batch,
-    "search":   flow_search,
-    "convert":  flow_convert,
-    "history":  flow_history,
-    "settings": flow_settings,
+    "download":       flow_download,
+    "batch":          flow_batch,
+    "search":         flow_search,
+    "convert":        flow_convert,
+    "history":        flow_history,
+    "settings":       flow_settings,
+    "queue_view":     flow_queue_view,
+    "queue_download": flow_download_queue,
 }
 
 
@@ -548,7 +738,7 @@ def run_interactive() -> None:
         try:
             choice = questionary.select(
                 "Apa yang ingin kamu lakukan?",
-                choices=MENU_CHOICES,
+                choices=_build_menu(),
                 style=THEME,
                 use_shortcuts=False,
             ).ask()
