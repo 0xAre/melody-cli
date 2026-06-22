@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 
 import yt_dlp
 
+from melody.utils.validators import normalize_yt_url
+
 
 @dataclass
 class SearchResult:
@@ -40,19 +42,13 @@ def _is_likely_drm(entry: dict) -> bool:
     """
     Heuristik ringan untuk deteksi kemungkinan DRM.
     Tidak 100% akurat — hanya sebagai indikasi awal di UI.
+    URL search result sudah di-normalize ke youtube.com sebelum ini dipanggil,
+    jadi cek berdasarkan channel saja.
     """
     channel = (entry.get("channel") or entry.get("uploader") or "").lower()
-
-    # URL YouTube Music
-    url = entry.get("url") or entry.get("webpage_url") or ""
-    if "music.youtube.com" in url:
-        return True
-
-    # Channel label rekaman besar — sering DRM
     for hint in _DRM_CHANNEL_HINTS:
         if hint in channel:
             return True
-
     return False
 
 
@@ -85,7 +81,8 @@ def search_youtube(query: str, max_results: int = 10) -> list[SearchResult]:
         if not entry:
             continue
         vid_id = entry.get("id", "")
-        url = entry.get("url") or f"https://www.youtube.com/watch?v={vid_id}"
+        raw_url = entry.get("url") or f"https://www.youtube.com/watch?v={vid_id}"
+        url, _ = normalize_yt_url(raw_url)
         raw.append(
             SearchResult(
                 index=0,          # di-assign ulang setelah sort
