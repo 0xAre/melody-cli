@@ -1,8 +1,9 @@
 # 🎵 Melody CLI
 
-> Fast, elegant YouTube → MP3 downloader for the terminal.
+> YouTube → MP3 downloader dengan interactive wizard di terminal.
 > Navigasi dengan arrow keys — tidak perlu hafal command apapun.
 
+[![PyPI](https://img.shields.io/pypi/v/melody-mp3?color=00d7af&label=PyPI)](https://pypi.org/project/melody-mp3)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -16,8 +17,11 @@
 ❯   Download lagu / playlist dari YouTube
     Download dari file daftar URL  (.txt)
     Cari lagu di YouTube
+  ──────── Antrian [3 lagu] ────────────
+    Antrian [3 lagu]  —  lihat & kelola
+    Download antrian  (3 lagu)
+  ──────────────────────────────────────
     Konversi file audio lokal ke MP3
-  ──────────────
     Riwayat download
     Pengaturan
     Keluar
@@ -27,18 +31,15 @@
 
 ## Install
 
-### Windows (satu command)
+### Windows — satu command
 
-Buka **PowerShell**, paste ini, tekan Enter:
+Buka **PowerShell**, paste, tekan Enter:
 
 ```powershell
 irm https://raw.githubusercontent.com/0xAre/melody-cli/master/install.ps1 | iex
 ```
 
-Script akan otomatis:
-- cek Python & FFmpeg
-- install `pipx` jika belum ada
-- install `melody` dan daftarkan ke PATH
+Otomatis cek Python, install pipx, install melody, daftarkan ke PATH.
 
 ### Linux / macOS
 
@@ -46,16 +47,14 @@ Script akan otomatis:
 curl -sSL https://raw.githubusercontent.com/0xAre/melody-cli/master/install.sh | bash
 ```
 
-### Via PyPI
+### Via pip / pipx
 
 ```bash
+# pip
 pip install melody-mp3
-```
 
-### Manual dari GitHub
-
-```bash
-pip install git+https://github.com/0xAre/melody-cli.git
+# pipx (direkomendasikan — environment terisolasi)
+pipx install melody-mp3
 ```
 
 ---
@@ -64,10 +63,8 @@ pip install git+https://github.com/0xAre/melody-cli.git
 
 | | |
 |---|---|
-| **Python** | 3.10 atau lebih baru |
+| **Python** | 3.10+ |
 | **FFmpeg** | wajib ada di PATH untuk konversi MP3 |
-
-**Install FFmpeg:**
 
 ```bash
 # Windows
@@ -82,6 +79,20 @@ sudo apt install ffmpeg
 
 ---
 
+## Fitur
+
+- **Interactive wizard** — navigasi arrow keys, tidak perlu hafal command apapun
+- **Queue system** — kumpulkan lagu dari beberapa pencarian, download sekaligus
+- **Cari YouTube** langsung dari terminal
+- **Support YouTube Music URLs** (`music.youtube.com`) — otomatis dikonversi
+- **Auto-fallback DRM** — jika video protected, otomatis coba versi lain
+- **Download playlist** sekaligus
+- **History & dedup** — tidak download ulang lagu yang sama
+- **Config permanen** — kualitas, folder output, sample rate
+- **Kompatibel music box** — 44100 Hz, libmp3lame, stereo
+
+---
+
 ## Penggunaan
 
 ### Mode interaktif (direkomendasikan)
@@ -90,30 +101,31 @@ sudo apt install ffmpeg
 melody
 ```
 
-Jalankan saja `melody`, navigasi dengan ↑↓ arrow keys. Tidak perlu hafal flag apapun.
+Jalankan `melody`, navigasi ↑↓, pilih Enter. Tidak perlu hafal apapun.
 
-**Alur queue** — kumpulkan dulu, download sekaligus:
+**Alur queue — kumpulkan dulu, download sekaligus:**
+
 ```
-Cari → pilih → Tambah ke antrian
-Cari → pilih → Tambah ke antrian
-...
-Download antrian  (proses semua sekaligus)
+melody
+  → Cari lagu di YouTube  →  pilih  →  Tambah ke antrian
+  → Cari lagu di YouTube  →  pilih  →  Tambah ke antrian
+  → Download antrian  (proses semua sekaligus)
 ```
 
-### Mode CLI (untuk scripting)
+### Mode CLI
 
 ```bash
-# Download lagu / playlist
+# Download satu lagu atau playlist
 melody get "https://youtu.be/..."
 melody get "https://youtube.com/playlist?list=..." -o ~/Music -q 320
 
-# Cari dan download
+# Cari YouTube
 melody search query "bohemian rhapsody"
 
-# Konversi file lokal
-melody convert file ./dump -o ./musik
+# Konversi file audio lokal
+melody convert file ./folder -o ./output
 
-# Riwayat
+# Riwayat download
 melody history show
 
 # Konfigurasi
@@ -126,25 +138,14 @@ melody config show --set output_dir=D:/Musik
 
 ## Konfigurasi
 
-Tersimpan otomatis di `%APPDATA%\melody\config.toml` (Windows) atau `~/.config/melody/config.toml`.
+Tersimpan di `%APPDATA%\melody\config.toml` (Windows) / `~/.config/melody/config.toml` (Linux/macOS).
 
 | Key | Default | Keterangan |
 |---|---|---|
 | `output_dir` | `~/Music` | Folder default download |
 | `quality` | `192` | Bitrate MP3: 128 / 192 / 256 / 320 kbps |
 | `skip_history` | `true` | Skip otomatis jika sudah pernah didownload |
-| `sample_rate` | `44100` | Hz — kompatibel dengan portable music player |
-
----
-
-## Kompatibilitas Music Player
-
-Melody menghasilkan MP3 yang kompatibel dengan hampir semua portable music player (music box, Acome, dll):
-
-- Sample rate **44100 Hz**
-- Codec **libmp3lame**
-- **Stereo** (2 channel)
-- ID3 metadata tertanam
+| `sample_rate` | `44100` | Hz — kompatibel portable music player |
 
 ---
 
