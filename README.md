@@ -64,18 +64,11 @@ pipx install melody-mp3
 | | |
 |---|---|
 | **Python** | 3.10+ |
-| **FFmpeg** | wajib ada di PATH untuk konversi MP3 |
+| **FFmpeg** | **otomatis** — diunduh saat pertama kali dibutuhkan |
 
-```bash
-# Windows
-winget install -e --id Gyan.FFmpeg
+melody menyertakan `static-ffmpeg` sebagai dependensi — jika FFmpeg tidak ditemukan di sistem, melody mengunduhnya otomatis (~80 MB, sekali saja, tersimpan di cache).
 
-# macOS
-brew install ffmpeg
-
-# Ubuntu / Debian
-sudo apt install ffmpeg
-```
+Jika sudah punya FFmpeg di sistem, melody langsung menggunakannya tanpa download.
 
 ---
 
