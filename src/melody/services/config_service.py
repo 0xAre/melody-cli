@@ -15,6 +15,9 @@ DEFAULTS: dict = {
     "quality": "192",
     "skip_history": True,
     "sample_rate": "44100",
+    # Nama browser untuk ambil cookies: chrome, firefox, edge, brave, opera
+    # Kosong = tidak pakai cookies (default)
+    "cookies_browser": "",
 }
 
 _CONFIG_PATH = Path(user_config_dir("melody")) / "config.toml"

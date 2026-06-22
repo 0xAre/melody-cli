@@ -34,8 +34,16 @@ class DownloadSummary:
 def _build_ydl_opts(output_dir: Path, quality: str, hooks: list) -> dict[str, Any]:
     cfg = config_service.get_all()
     sample_rate = cfg.get("sample_rate", "44100")
-    return {
-        "format": "bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best",
+    cookies_browser = cfg.get("cookies_browser", "")
+
+    opts: dict[str, Any] = {
+        # iOS client: paling stabil, jarang kena 403 dari YouTube
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["ios", "web"],
+            }
+        },
+        "format": "bestaudio/best",
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
@@ -53,13 +61,26 @@ def _build_ydl_opts(output_dir: Path, quality: str, hooks: list) -> dict[str, An
         },
         "outtmpl": str(output_dir / "%(title)s.%(ext)s"),
         "concurrent_fragment_downloads": 4,
-        "retries": 5,
-        "fragment_retries": 5,
+        "retries": 10,
+        "fragment_retries": 10,
+        "http_headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
+                "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 "
+                "Mobile/15E148 Safari/604.1"
+            ),
+        },
         "quiet": True,
         "no_warnings": True,
         "ignoreerrors": False,
         "progress_hooks": hooks,
     }
+
+    # Kalau user set cookies_browser di config, pakai cookies dari browser tsb
+    if cookies_browser:
+        opts["cookiesfrombrowser"] = (cookies_browser, None, None, None)
+
+    return opts
 
 
 def download_one(
@@ -132,8 +153,20 @@ def download_one(
 
     except yt_dlp.utils.DownloadError as e:
         msg = str(e)
+        # Terjemahkan error umum ke pesan yang lebih actionable
+        if "403" in msg or "Forbidden" in msg:
+            msg = (
+                "HTTP 403 Forbidden — YouTube memblokir request.\n"
+                "  Fix 1: jalankan  melody fix-403  untuk coba otomatis\n"
+                "  Fix 2: set cookies browser via  melody config show --set cookies_browser=chrome"
+            )
+        elif "Sign in" in msg or "bot" in msg.lower():
+            msg = (
+                "YouTube meminta login / mendeteksi bot.\n"
+                "  Fix: melody config show --set cookies_browser=chrome  (atau firefox/edge)"
+            )
         if progress and task_id is not None:
-            progress.update(task_id, description=f"[red]✗ {msg[:50]}[/red]")
+            progress.update(task_id, description=f"[red]✗ Error[/red]")
         return DownloadResult(success=False, url=url, error=msg)
 
     except Exception as e:
