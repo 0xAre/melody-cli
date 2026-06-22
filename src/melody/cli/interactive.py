@@ -55,6 +55,9 @@ _QUEUE: list[QueueItem] = []
 def banner():
     import os
     from rich.table import Table as RichTable
+    from rich.align import Align
+    from rich.console import Group as RichGroup
+    from rich.text import Text
 
     cfg = config_service.get_all()
     quality  = cfg.get("quality", "192")
@@ -62,25 +65,38 @@ def banner():
     queue_n  = len(_QUEUE)
     username = (os.environ.get("USERNAME") or os.environ.get("USER") or "there").strip().split()[0]
 
-    grid = RichTable.grid(expand=True, padding=(0, 1))
-    grid.add_column(ratio=5)
-    grid.add_column(ratio=5)
-
     from rich.markup import escape as _esc
     _raw_dir = out_dir if len(out_dir) <= 24 else "..." + out_dir[-21:]
     short_dir = _esc(_raw_dir)
 
+    _legacy = getattr(console, "legacy_windows", False)
+    _note = "~" if _legacy else "♪"
+
+    if not _legacy:
+        _logo = "\n".join([
+            "███╗   ███╗███████╗██╗      ██████╗ ██████╗ ██╗   ██╗",
+            "████╗ ████║██╔════╝██║     ██╔═══██╗██╔══██╗╚██╗ ██╔╝",
+            "██╔████╔██║█████╗  ██║     ██║   ██║██║  ██║ ╚████╔╝ ",
+            "██║╚██╔╝██║██╔══╝  ██║     ██║   ██║██║  ██║  ╚██╔╝  ",
+            "██║ ╚═╝ ██║███████╗███████╗╚██████╔╝██████╔╝   ██║   ",
+            "╚═╝     ╚═╝╚══════╝╚══════╝ ╚═════╝ ╚═════╝    ╚═╝   ",
+        ])
+        logo_widget = Align.center(Text(_logo, style="bold cyan"), pad=False)
+    else:
+        logo_widget = Align.center(Text("~ melody ~", style="bold cyan"), pad=False)
+
+    sub_widget = Align.center(
+        Text(f"{_note}  YouTube -> MP3 Downloader  {_note}", style="dim"),
+        pad=False,
+    )
+
+    grid = RichTable.grid(expand=True, padding=(0, 1))
+    grid.add_column(ratio=5)
+    grid.add_column(ratio=5)
+
     left = (
         "\n"
         f"  Selamat datang, [bold]{username}[/bold]\n"
-        "\n"
-        "    [cyan]  ___  [/cyan]\n"
-        "    [cyan] /   \\ [/cyan]\n"
-        "    [cyan]| (o) |[/cyan]\n"
-        "    [cyan] \\___/ [/cyan]\n"
-        "\n"
-        "  [bold cyan]~ melody[/bold cyan]\n"
-        "  [dim]YouTube -> MP3 downloader[/dim]\n"
         "\n"
         f"  [dim]Kualitas[/dim]  [cyan]{quality} kbps[/cyan]\n"
         f"  [dim]Output  [/dim]  [dim]{short_dir}[/dim]\n"
@@ -94,28 +110,21 @@ def banner():
 
     right = (
         "\n"
-        "  [bold]Tips untuk memulai[/bold]\n"
-        "\n"
+        "  [bold]Tips[/bold]\n"
         "  Ketik [cyan]melody[/cyan], navigasi arrow keys\n"
         "\n"
         "  [bold]Alur queue[/bold]\n"
         "  Cari -> pilih -> [cyan]Tambah ke antrian[/cyan]\n"
         "  Ulangi, pilih [cyan]Download antrian[/cyan]\n"
         "\n"
-        "  [bold]Apa yang baru  v1.0.0[/bold]\n"
-        "  Queue system, download sekaligus\n"
-        "  Support [cyan]music.youtube.com[/cyan]\n"
-        "  Auto-fallback DRM protected\n"
-        "\n"
     )
 
     grid.add_row(left, right)
 
     console.print(Panel(
-        grid,
-        title=f"[bold cyan]melody[/bold cyan]  [dim]v{__version__}[/dim]",
+        RichGroup(Text(""), logo_widget, sub_widget, Text(""), grid),
         border_style="cyan",
-        padding=(0, 0),
+        padding=(0, 1),
     ))
 
 
