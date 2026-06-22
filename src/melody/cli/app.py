@@ -36,9 +36,12 @@ def cmd_get(
     from melody.core.downloader import download_one, download_playlist
     from melody.services import config_service
     from melody.utils.ffmpeg import require_ffmpeg
-    from melody.utils.validators import resolve_output_dir, validate_quality
+    from melody.utils.validators import normalize_yt_url, resolve_output_dir, validate_quality
 
     require_ffmpeg()
+    url, was_converted = normalize_yt_url(url)
+    if was_converted:
+        console.print("[dim cyan]YouTube Music URL → menggunakan YouTube[/dim cyan]")
     cfg = config_service.get_all()
     q = quality or cfg.get("quality", "192")
     try:

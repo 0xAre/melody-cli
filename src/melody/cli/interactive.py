@@ -107,6 +107,7 @@ def _result_fail(err: str) -> None:
 def flow_download() -> None:
     from melody.core.downloader import download_one, download_playlist
     from melody.utils.ffmpeg import require_ffmpeg
+    from melody.utils.validators import normalize_yt_url
 
     require_ffmpeg()
 
@@ -118,6 +119,10 @@ def flow_download() -> None:
     if not url or not url.strip():
         return
     url = url.strip()
+
+    url, was_converted = normalize_yt_url(url)
+    if was_converted:
+        console.print("  [dim cyan]YouTube Music URL → menggunakan YouTube[/dim cyan]")
 
     cfg = config_service.get_all()
     quality = _ask_quality(cfg.get("quality", "192"))

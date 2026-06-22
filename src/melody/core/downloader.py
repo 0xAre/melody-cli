@@ -8,7 +8,7 @@ from typing import Any
 import yt_dlp
 
 from melody.services import config_service, history_service, progress_service
-from melody.utils.validators import extract_video_id
+from melody.utils.validators import extract_video_id, normalize_yt_url
 
 
 @dataclass
@@ -92,6 +92,9 @@ def download_one(
     show_progress: bool = True,
 ) -> DownloadResult:
     """Download satu URL (video atau playlist item) → MP3."""
+
+    # Normalisasi: music.youtube.com → youtube.com (bypass DRM YouTube Music)
+    url, was_converted = normalize_yt_url(url)
 
     video_id = extract_video_id(url) or url
 
@@ -197,6 +200,7 @@ def download_playlist(
     skip_history: bool = True,
 ) -> DownloadSummary:
     """Download seluruh playlist. Tiap item tampil progress bar sendiri."""
+    url, _ = normalize_yt_url(url)
     summary = DownloadSummary()
 
     # Extract info dulu tanpa download untuk tahu jumlah item
