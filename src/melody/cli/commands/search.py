@@ -5,11 +5,11 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from sonic.core.downloader import download_one
-from sonic.core.searcher import search_youtube
-from sonic.services import config_service
-from sonic.utils.ffmpeg import require_ffmpeg
-from sonic.utils.validators import resolve_output_dir, validate_quality
+from melody.core.downloader import download_one
+from melody.core.searcher import search_youtube
+from melody.services import config_service
+from melody.utils.ffmpeg import require_ffmpeg
+from melody.utils.validators import resolve_output_dir, validate_quality
 
 app = typer.Typer(help="Cari lagu di YouTube dan langsung download")
 console = Console()

@@ -7,8 +7,8 @@ from typing import Any
 
 import yt_dlp
 
-from sonic.services import config_service, history_service, progress_service
-from sonic.utils.validators import extract_video_id
+from melody.services import config_service, history_service, progress_service
+from melody.utils.validators import extract_video_id
 
 
 @dataclass

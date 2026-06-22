@@ -1,14 +1,30 @@
-# 🎵 sonic
+# 🎵 Melody CLI
 
 > Fast, elegant YouTube → MP3 downloader for the terminal.
+> Jalankan `melody` — navigasi dengan arrow keys, tidak perlu hafal command apapun.
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ```
-sonic download url "https://youtu.be/..." -q 320
-sonic search "bohemian rhapsody" --download
-sonic batch playlist.txt -o ~/Music
+$ melody
+```
+
+```
+╭────────────────────────────────────────────╮
+│  melody  v1.0.0                            │
+│  YouTube → MP3  •  Cari, Download, Konversi│
+╰────────────────────────────────────────────╯
+
+? Apa yang ingin kamu lakukan?
+❯   Download lagu / playlist dari YouTube
+    Download dari file daftar URL  (.txt)
+    Cari lagu di YouTube
+    Konversi file audio lokal ke MP3
+  ──────────────
+    Riwayat download
+    Pengaturan
+    Keluar
 ```
 
 ---
@@ -21,11 +37,11 @@ sonic batch playlist.txt -o ~/Music
 - [FFmpeg](https://ffmpeg.org/download.html) (wajib ada di PATH)
 
 ```bash
-# Windows (Chocolatey)
-choco install ffmpeg
-
 # Windows (winget)
 winget install -e --id Gyan.FFmpeg
+
+# Windows (Chocolatey)
+choco install ffmpeg
 
 # macOS
 brew install ffmpeg
@@ -34,97 +50,62 @@ brew install ffmpeg
 sudo apt install ffmpeg
 ```
 
-### Install sonic
+### Install Melody CLI
 
 ```bash
-# Clone repo
-git clone https://github.com/aryansyach/sonic-dl
-cd sonic-dl
-
-# Install (development)
+git clone https://github.com/aryansyach/melody-cli
+cd melody-cli
 pip install -e .
-
-# Atau install langsung
-pip install sonic-dl
 ```
 
 ---
 
 ## Usage
 
-### Download satu lagu
+### Mode interaktif (direkomendasikan)
 
 ```bash
-sonic download url "https://youtu.be/dQw4w9WgXcQ"
-
-# Pilih folder dan kualitas
-sonic download url "https://youtu.be/dQw4w9WgXcQ" -o ~/Music -q 320
+melody
 ```
 
-### Download playlist
+Navigasi dengan arrow keys ↑↓, pilih dengan Enter. Tidak perlu hafal command apapun.
+
+### Mode CLI (untuk scripting)
 
 ```bash
-sonic download url "https://www.youtube.com/playlist?list=PLxxxxx"
-```
+# Download satu lagu
+melody download url "https://youtu.be/..."
 
-### Download dari file (batch)
+# Download dengan kualitas dan folder kustom
+melody download url "https://youtu.be/..." -o ~/Music -q 320
 
-```bash
-# Buat file urls.txt
-# https://youtu.be/abc
-# https://youtu.be/def
+# Download playlist
+melody download url "https://youtube.com/playlist?list=..."
 
-sonic download batch urls.txt -o ~/Music
-```
+# Download dari file daftar URL
+melody download batch urls.txt -o ~/Music
 
-### Cari dan download
+# Cari YouTube
+melody search query "bohemian rhapsody" --download
 
-```bash
-# Tampilkan hasil saja
-sonic search query "bohemian rhapsody"
+# Konversi file lokal
+melody convert file ./dump -o ./musik -q 256
 
-# Tampilkan + pilih untuk download
-sonic search query "bohemian rhapsody" --download
-```
+# Riwayat download
+melody history show
+melody history show --clear
 
-### Konversi file lokal
-
-```bash
-# Satu file
-sonic convert file lagu.webm -o ./output
-
-# Satu folder
-sonic convert file ./dump -o ./musik -q 256 --overwrite
-```
-
-### Konfigurasi
-
-```bash
-# Lihat config aktif
-sonic config show --show
-
-# Ubah satu setting
-sonic config show --set output_dir=D:/Musik
-sonic config show --set quality=320
-
-# Reset ke default
-sonic config show --reset
-```
-
-### Riwayat download
-
-```bash
-sonic history show
-sonic history show --last 50
-sonic history show --find "Coldplay"
-sonic history show --clear
+# Konfigurasi
+melody config show --show
+melody config show --set quality=320
+melody config show --set output_dir=D:/Musik
 ```
 
 ---
 
-## Config
+## Konfigurasi
 
-Config disimpan di `%APPDATA%\sonic\config.toml` (Windows) / `~/.config/sonic/config.toml`.
+Config tersimpan otomatis di `%APPDATA%\melody\config.toml`.
 
 | Key | Default | Keterangan |
 |---|---|---|
@@ -137,7 +118,7 @@ Config disimpan di `%APPDATA%\sonic\config.toml` (Windows) / `~/.config/sonic/co
 
 ## Kompatibilitas Music Box
 
-sonic menghasilkan MP3 yang kompatibel dengan hampir semua portable music player:
+Melody menghasilkan MP3 yang kompatibel dengan hampir semua portable music player:
 - Sample rate **44100 Hz**
 - Codec **libmp3lame**
 - **Stereo** (2 channel)
@@ -148,11 +129,9 @@ sonic menghasilkan MP3 yang kompatibel dengan hampir semua portable music player
 ## Development
 
 ```bash
-git clone https://github.com/aryansyach/sonic-dl
-cd sonic-dl
+git clone https://github.com/aryansyach/melody-cli
+cd melody-cli
 pip install -e ".[dev]"
-
-# Jalankan tests
 pytest tests/ -v
 ```
 

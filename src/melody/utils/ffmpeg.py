@@ -39,7 +39,7 @@ def require_ffmpeg() -> None:
     console.print(
         Panel(
             f"[red bold]FFmpeg tidak ditemukan![/red bold]\n\n"
-            f"sonic membutuhkan FFmpeg untuk konversi audio.\n\n"
+            f"melody membutuhkan FFmpeg untuk konversi audio.\n\n"
             f"{guide}",
             title="[red]Error[/red]",
             border_style="red",

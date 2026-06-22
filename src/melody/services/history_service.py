@@ -1,7 +1,7 @@
 """
 History download disimpan di SQLite:
-  Windows : %LOCALAPPDATA%/sonic/history.db
-  Linux   : ~/.local/share/sonic/history.db
+  Windows : %LOCALAPPDATA%/melody/history.db
+  Linux   : ~/.local/share/melody/history.db
 """
 import sqlite3
 from dataclasses import dataclass
@@ -10,7 +10,7 @@ from pathlib import Path
 
 from platformdirs import user_data_dir
 
-_DB_PATH = Path(user_data_dir("sonic")) / "history.db"
+_DB_PATH = Path(user_data_dir("melody")) / "history.db"
 
 _CREATE_SQL = """
 CREATE TABLE IF NOT EXISTS downloads (

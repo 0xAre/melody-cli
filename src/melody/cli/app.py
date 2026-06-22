@@ -1,12 +1,12 @@
 import typer
 from rich.console import Console
 
-from sonic import __version__
-from sonic.cli.commands import config, convert, download, history, search
+from melody import __version__
+from melody.cli.commands import config, convert, download, history, search
 
 app = typer.Typer(
-    name="sonic",
-    help="sonic — YouTube to MP3 downloader yang cepat & elegan.",
+    name="melody",
+    help="melody — YouTube to MP3 downloader yang cepat & elegan.",
     no_args_is_help=False,       # tanpa args → interactive wizard
     rich_markup_mode="rich",
     add_completion=True,
@@ -19,23 +19,23 @@ app.add_typer(download.app, name="download", help="Download YouTube URL ke MP3")
 app.add_typer(convert.app,  name="convert",  help="Konversi file audio lokal ke MP3")
 app.add_typer(search.app,   name="search",   help="Cari YouTube dan download")
 app.add_typer(history.app,  name="history",  help="Riwayat download")
-app.add_typer(config.app,   name="config",   help="Konfigurasi sonic")
+app.add_typer(config.app,   name="config",   help="Konfigurasi melody")
 
 
-# ── Shortcut: sonic get <url> ──────────────────────────────────
+# ── Shortcut: melody get <url> ──────────────────────────────────
 @app.command("get", hidden=True)
 def cmd_get(
     url: str = typer.Argument(..., help="URL YouTube"),
     output: str = typer.Option("", "--output", "-o"),
     quality: str = typer.Option("", "--quality", "-q"),
 ) -> None:
-    """Shortcut: sonic get <url>  (sama dengan sonic download url <url>)"""
+    """Shortcut: melody get <url>  (sama dengan melody download url <url>)"""
     from pathlib import Path
 
-    from sonic.core.downloader import download_one, download_playlist
-    from sonic.services import config_service
-    from sonic.utils.ffmpeg import require_ffmpeg
-    from sonic.utils.validators import resolve_output_dir, validate_quality
+    from melody.core.downloader import download_one, download_playlist
+    from melody.services import config_service
+    from melody.utils.ffmpeg import require_ffmpeg
+    from melody.utils.validators import resolve_output_dir, validate_quality
 
     require_ffmpeg()
     cfg = config_service.get_all()
@@ -72,7 +72,7 @@ def cmd_get(
 # ── Version flag ───────────────────────────────────────────────
 def _version_cb(value: bool) -> None:
     if value:
-        console.print(f"sonic [bold cyan]{__version__}[/bold cyan]")
+        console.print(f"melody [bold cyan]{__version__}[/bold cyan]")
         raise typer.Exit()
 
 
@@ -87,7 +87,7 @@ def main_callback(
     ),
 ) -> None:
     if ctx.invoked_subcommand is None:
-        from sonic.cli.interactive import run_interactive
+        from melody.cli.interactive import run_interactive
         run_interactive()
 
 

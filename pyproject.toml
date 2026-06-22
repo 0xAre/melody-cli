@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "sonic-dl"
+name = "melody-cli"
 version = "1.0.0"
 description = "Fast YouTube to MP3 downloader — CLI tool for music lovers"
 readme = "README.md"
@@ -35,14 +35,14 @@ dependencies = [
 dev = ["pytest>=8.0", "ruff>=0.4"]
 
 [project.scripts]
-sonic = "sonic.cli.app:main"
+melody = "melody.cli.app:main"
 
 [project.urls]
-Repository = "https://github.com/aryansyach/sonic-dl"
-Issues = "https://github.com/aryansyach/sonic-dl/issues"
+Repository = "https://github.com/aryansyach/melody-cli"
+Issues = "https://github.com/aryansyach/melody-cli/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/sonic"]
+packages = ["src/melody"]
 
 [tool.ruff]
 line-length = 100

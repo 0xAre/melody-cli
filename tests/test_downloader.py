@@ -3,9 +3,9 @@ from pathlib import Path
 
 
 def test_download_skips_known_video(tmp_path):
-    from sonic.core.downloader import download_one
+    from melody.core.downloader import download_one
 
-    with patch("sonic.core.downloader.history_service.is_downloaded", return_value=True):
+    with patch("melody.core.downloader.history_service.is_downloaded", return_value=True):
         r = download_one("https://youtu.be/dQw4w9WgXcQ", tmp_path, "192", skip_history=True)
 
     assert r.skipped is True
@@ -13,7 +13,7 @@ def test_download_skips_known_video(tmp_path):
 
 
 def test_download_records_history(tmp_path):
-    from sonic.core.downloader import download_one
+    from melody.core.downloader import download_one
 
     fake_info = {
         "id": "testid123",
@@ -28,10 +28,10 @@ def test_download_records_history(tmp_path):
     mock_ydl.extract_info.return_value = fake_info
     mock_ydl.prepare_filename.return_value = str(tmp_path / "Test Video.mp3")
 
-    with patch("sonic.core.downloader.history_service.is_downloaded", return_value=False), \
-         patch("sonic.core.downloader.history_service.record") as mock_record, \
-         patch("sonic.core.downloader.yt_dlp.YoutubeDL", return_value=mock_ydl), \
-         patch("sonic.core.downloader.progress_service.make_progress"):
+    with patch("melody.core.downloader.history_service.is_downloaded", return_value=False), \
+         patch("melody.core.downloader.history_service.record") as mock_record, \
+         patch("melody.core.downloader.yt_dlp.YoutubeDL", return_value=mock_ydl), \
+         patch("melody.core.downloader.progress_service.make_progress"):
         r = download_one("https://youtu.be/testid123", tmp_path, "192",
                          skip_history=True, show_progress=False)
 

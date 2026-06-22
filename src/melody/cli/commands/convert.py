@@ -6,10 +6,10 @@ from rich.console import Console
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-from sonic.core.converter import SUPPORTED_EXTS, ConvertResult, convert_file, find_audio_files
-from sonic.services import config_service
-from sonic.utils.ffmpeg import require_ffmpeg
-from sonic.utils.validators import validate_quality
+from melody.core.converter import SUPPORTED_EXTS, ConvertResult, convert_file, find_audio_files
+from melody.services import config_service
+from melody.utils.ffmpeg import require_ffmpeg
+from melody.utils.validators import validate_quality
 
 app = typer.Typer(help="Konversi file audio lokal ke MP3")
 console = Console()

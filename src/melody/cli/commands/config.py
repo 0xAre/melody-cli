@@ -4,9 +4,9 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from sonic.services import config_service
+from melody.services import config_service
 
-app = typer.Typer(help="Kelola konfigurasi sonic")
+app = typer.Typer(help="Kelola konfigurasi melody")
 console = Console()
 
 
@@ -17,14 +17,14 @@ def cmd_config(
     reset: Annotated[bool, typer.Option("--reset", help="Reset ke default")] = False,
 ) -> None:
     """
-    Kelola config sonic.
+    Kelola config melody.
 
     \b
     Contoh:
-      sonic config --show
-      sonic config --set quality=320
-      sonic config --set output_dir=D:/Musik
-      sonic config --reset
+      melody config --show
+      melody config --set quality=320
+      melody config --set output_dir=D:/Musik
+      melody config --reset
     """
     if reset:
         config_service.reset()

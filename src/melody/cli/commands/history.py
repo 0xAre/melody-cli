@@ -4,7 +4,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from sonic.services import history_service
+from melody.services import history_service
 
 app = typer.Typer(help="Lihat dan kelola riwayat download")
 console = Console()

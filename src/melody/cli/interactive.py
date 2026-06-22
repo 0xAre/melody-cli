@@ -1,5 +1,5 @@
 """
-Interactive wizard — default mode ketika `sonic` dijalankan tanpa argumen.
+Interactive wizard — default mode ketika `melody` dijalankan tanpa argumen.
 Navigasi dengan arrow keys, tidak perlu hafal command apapun.
 """
 import sys
@@ -12,8 +12,8 @@ from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
-from sonic import __version__
-from sonic.services import config_service
+from melody import __version__
+from melody.services import config_service
 
 console = Console()
 
@@ -47,7 +47,7 @@ def _q(result):
 
 def banner():
     console.print(Panel(
-        f"[bold cyan]sonic[/bold cyan]  [dim]v{__version__}[/dim]\n"
+        f"[bold cyan]melody[/bold cyan]  [dim]v{__version__}[/dim]\n"
         "[dim]YouTube → MP3  •  Cari, Download, Konversi[/dim]",
         border_style="cyan",
         padding=(0, 3),
@@ -105,8 +105,8 @@ def _result_fail(err: str) -> None:
 # ── Flows ───────────────────────────────────────────────────────
 
 def flow_download() -> None:
-    from sonic.core.downloader import download_one, download_playlist
-    from sonic.utils.ffmpeg import require_ffmpeg
+    from melody.core.downloader import download_one, download_playlist
+    from melody.utils.ffmpeg import require_ffmpeg
 
     require_ffmpeg()
 
@@ -151,8 +151,8 @@ def flow_download() -> None:
 
 
 def flow_batch() -> None:
-    from sonic.core.downloader import download_one
-    from sonic.utils.ffmpeg import require_ffmpeg
+    from melody.core.downloader import download_one
+    from melody.utils.ffmpeg import require_ffmpeg
 
     require_ffmpeg()
 
@@ -215,9 +215,9 @@ def flow_batch() -> None:
 
 
 def flow_search() -> None:
-    from sonic.core.downloader import download_one
-    from sonic.core.searcher import search_youtube
-    from sonic.utils.ffmpeg import require_ffmpeg
+    from melody.core.downloader import download_one
+    from melody.core.searcher import search_youtube
+    from melody.utils.ffmpeg import require_ffmpeg
 
     query = questionary.text("Cari lagu:", style=THEME).ask()
     if not query:
@@ -288,8 +288,8 @@ def flow_search() -> None:
 def flow_convert() -> None:
     from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-    from sonic.core.converter import SUPPORTED_EXTS, convert_file, find_audio_files
-    from sonic.utils.ffmpeg import require_ffmpeg
+    from melody.core.converter import SUPPORTED_EXTS, convert_file, find_audio_files
+    from melody.utils.ffmpeg import require_ffmpeg
 
     require_ffmpeg()
 
@@ -372,7 +372,7 @@ def flow_convert() -> None:
 
 
 def flow_history() -> None:
-    from sonic.services import history_service
+    from melody.services import history_service
 
     rows = history_service.get_recent(20)
 

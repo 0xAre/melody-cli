@@ -1,8 +1,8 @@
 """
 Config permanen disimpan di:
-  Windows : %APPDATA%/sonic/config.toml
-  Linux   : ~/.config/sonic/config.toml
-  macOS   : ~/Library/Application Support/sonic/config.toml
+  Windows : %APPDATA%/melody/config.toml
+  Linux   : ~/.config/melody/config.toml
+  macOS   : ~/Library/Application Support/melody/config.toml
 """
 import tomllib
 from pathlib import Path
@@ -17,7 +17,7 @@ DEFAULTS: dict = {
     "sample_rate": "44100",
 }
 
-_CONFIG_PATH = Path(user_config_dir("sonic")) / "config.toml"
+_CONFIG_PATH = Path(user_config_dir("melody")) / "config.toml"
 
 
 def _load_raw() -> dict:
