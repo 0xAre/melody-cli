@@ -55,6 +55,7 @@ Write-Host "  [ok] pipx" -ForegroundColor Green
 # ── 4. Install melody ─────────────────────────────────────────────
 Write-Host "  Installing melody-cli..." -ForegroundColor Cyan
 pipx install git+https://github.com/0xAre/melody-cli.git --force
+# Catatan: package PyPI tersedia sebagai: pip install melody-mp3
 
 Write-Host ""
 Write-Host "  ─────────────────────────────────────" -ForegroundColor DarkGray

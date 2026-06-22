@@ -46,7 +46,13 @@ Script akan otomatis:
 curl -sSL https://raw.githubusercontent.com/0xAre/melody-cli/master/install.sh | bash
 ```
 
-### Manual (semua OS)
+### Via PyPI
+
+```bash
+pip install melody-mp3
+```
+
+### Manual dari GitHub
 
 ```bash
 pip install git+https://github.com/0xAre/melody-cli.git
