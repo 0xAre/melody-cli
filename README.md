@@ -53,7 +53,7 @@ sudo apt install ffmpeg
 ### Install Melody CLI
 
 ```bash
-git clone https://github.com/aryansyach/melody-cli
+git clone https://github.com/0xAre/melody-cli
 cd melody-cli
 pip install -e .
 ```
@@ -129,7 +129,7 @@ Melody menghasilkan MP3 yang kompatibel dengan hampir semua portable music playe
 ## Development
 
 ```bash
-git clone https://github.com/aryansyach/melody-cli
+git clone https://github.com/0xAre/melody-cli
 cd melody-cli
 pip install -e ".[dev]"
 pytest tests/ -v

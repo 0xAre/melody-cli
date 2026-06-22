@@ -38,8 +38,8 @@ dev = ["pytest>=8.0", "ruff>=0.4"]
 melody = "melody.cli.app:main"
 
 [project.urls]
-Repository = "https://github.com/aryansyach/melody-cli"
-Issues = "https://github.com/aryansyach/melody-cli/issues"
+Repository = "https://github.com/0xAre/melody-cli"
+Issues = "https://github.com/0xAre/melody-cli/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/melody"]
