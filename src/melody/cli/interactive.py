@@ -776,13 +776,26 @@ def _build_menu() -> list:
 
     choices += [
         questionary.Separator(),
-        questionary.Choice("  Riwayat download", value="history"),
-        questionary.Choice("  Pengaturan",       value="settings"),
+        questionary.Choice("  Riwayat download",   value="history"),
+        questionary.Choice("  Pengaturan",         value="settings"),
+        questionary.Choice("  Laporkan bug",       value="report"),
         questionary.Separator(),
-        questionary.Choice("  Keluar",           value="exit"),
+        questionary.Choice("  Keluar",             value="exit"),
     ]
 
     return choices
+
+
+def flow_report() -> None:
+    from melody.cli.commands.report import open_report
+    import typer
+    console.print()
+    console.print("  [bold cyan]Laporan Bug[/bold cyan]\n")
+    title = typer.prompt("  Judul singkat masalah", default="[Bug] ")
+    desc  = typer.prompt("  Deskripsi (opsional)", default="")
+    console.print("\n  [dim]Membuka browser ke GitHub Issues...[/dim]")
+    open_report(title=title, description=desc)
+    console.print("  [green]Browser terbuka.[/green] Lengkapi form lalu Submit.\n")
 
 
 FLOWS = {
@@ -794,6 +807,7 @@ FLOWS = {
     "settings":       flow_settings,
     "queue_view":     flow_queue_view,
     "queue_download": flow_download_queue,
+    "report":         flow_report,
 }
 
 

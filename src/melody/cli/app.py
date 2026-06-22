@@ -2,7 +2,7 @@ import typer
 from rich.console import Console
 
 from melody import __version__
-from melody.cli.commands import config, convert, download, fix, history, search
+from melody.cli.commands import config, convert, download, fix, history, report, search
 
 app = typer.Typer(
     name="melody",
@@ -21,6 +21,7 @@ app.add_typer(search.app,   name="search",   help="Cari YouTube dan download")
 app.add_typer(history.app,  name="history",  help="Riwayat download")
 app.add_typer(config.app,   name="config",   help="Konfigurasi melody")
 app.add_typer(fix.app,      name="fix",      help="Diagnosa dan perbaiki error (403, dll)")
+app.add_typer(report.app,  name="report",   help="Laporkan bug ke GitHub Issues")
 
 
 # ── Shortcut: melody get <url> ──────────────────────────────────
