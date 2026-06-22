@@ -1,155 +1,151 @@
-# 🎵 Melody CLI
-
-> YouTube → MP3 downloader dengan interactive wizard di terminal.
-> Navigasi dengan arrow keys — tidak perlu hafal command apapun.
-
-[![PyPI](https://img.shields.io/pypi/v/melody-mp3?color=00d7af&label=PyPI)](https://pypi.org/project/melody-mp3)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-
 ```
-╭────────────────────────────────────────────╮
-│  melody  v1.0.0                            │
-│  YouTube → MP3  •  Cari, Download, Konversi│
-╰────────────────────────────────────────────╯
+███╗   ███╗███████╗██╗      ██████╗ ██████╗ ██╗   ██╗
+████╗ ████║██╔════╝██║     ██╔═══██╗██╔══██╗╚██╗ ██╔╝
+██╔████╔██║█████╗  ██║     ██║   ██║██║  ██║ ╚████╔╝
+██║╚██╔╝██║██╔══╝  ██║     ██║   ██║██║  ██║  ╚██╔╝
+██║ ╚═╝ ██║███████╗███████╗╚██████╔╝██████╔╝   ██║
+╚═╝     ╚═╝╚══════╝╚══════╝ ╚═════╝ ╚═════╝    ╚═╝
 
-? Apa yang ingin kamu lakukan?
-❯   Download lagu / playlist dari YouTube
-    Download dari file daftar URL  (.txt)
-    Cari lagu di YouTube
-  ──────── Antrian [3 lagu] ────────────
-    Antrian [3 lagu]  —  lihat & kelola
-    Download antrian  (3 lagu)
-  ──────────────────────────────────────
-    Konversi file audio lokal ke MP3
-    Riwayat download
-    Pengaturan
-    Keluar
+              ♪  YouTube → MP3 Downloader  ♪
 ```
+
+<div align="center">
+
+[![PyPI](https://img.shields.io/pypi/v/melody-mp3?color=00d7af&label=PyPI&style=flat-square)](https://pypi.org/project/melody-mp3)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square)](https://python.org)
+[![CI](https://img.shields.io/github/actions/workflow/status/0xAre/melody-cli/ci.yml?label=CI&style=flat-square)](https://github.com/0xAre/melody-cli/actions)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+
+**Download musik dari YouTube langsung ke MP3 — tanpa perlu hafal command apapun.**
+
+</div>
 
 ---
 
 ## Install
 
-### Windows — satu command
+```bash
+pip install melody-mp3
+```
 
-Buka **PowerShell**, paste, tekan Enter:
+Selesai. **FFmpeg sudah termasuk** — tidak perlu install manual, otomatis diunduh saat pertama kali dibutuhkan.
 
+### One-liner installer
+
+**Windows** (PowerShell):
 ```powershell
 irm https://raw.githubusercontent.com/0xAre/melody-cli/master/install.ps1 | iex
 ```
 
-Otomatis cek Python, install pipx, install melody, daftarkan ke PATH.
-
-### Linux / macOS
-
+**Linux / macOS**:
 ```bash
 curl -sSL https://raw.githubusercontent.com/0xAre/melody-cli/master/install.sh | bash
 ```
 
-### Via pip / pipx
-
-```bash
-# pip
-pip install melody-mp3
-
-# pipx (direkomendasikan — environment terisolasi)
-pipx install melody-mp3
-```
+> Butuh Python 3.10+. Cek dengan `python --version`.
 
 ---
 
-## Persyaratan
+## Cara pakai
 
-| | |
-|---|---|
-| **Python** | 3.10+ |
-| **FFmpeg** | **otomatis** — diunduh saat pertama kali dibutuhkan |
+Jalankan satu command:
 
-melody menyertakan `static-ffmpeg` sebagai dependensi — jika FFmpeg tidak ditemukan di sistem, melody mengunduhnya otomatis (~80 MB, sekali saja, tersimpan di cache).
+```bash
+melody
+```
 
-Jika sudah punya FFmpeg di sistem, melody langsung menggunakannya tanpa download.
+Navigasi dengan arrow keys, pilih dengan Enter. Tidak perlu hafal syntax apapun.
+
+```
+? Apa yang ingin kamu lakukan?
+❯   Download lagu / playlist dari YouTube
+    Download dari file daftar URL (.txt)
+    Cari lagu di YouTube
+  ──────── Antrian [3 lagu] ───────────
+    Antrian [3 lagu]  —  lihat & kelola
+    Download antrian  (3 lagu)
+  ─────────────────────────────────────
+    Konversi file audio lokal ke MP3
+    Riwayat download
+    Pengaturan
+    Laporkan bug
+    Keluar
+```
+
+### Queue — kumpulkan dulu, download sekaligus
+
+```
+melody
+  → Cari lagu → pilih → Tambah ke antrian
+  → Cari lagu → pilih → Tambah ke antrian
+  → Download antrian   ← semua diproses sekaligus
+```
+
+### CLI langsung
+
+```bash
+# Download satu lagu
+melody get "https://youtu.be/..."
+
+# Download playlist
+melody get "https://youtube.com/playlist?list=..." -o ~/Music -q 320
+
+# Cari dan download
+melody search query "bohemian rhapsody"
+
+# Konversi file lokal ke MP3
+melody convert file ./folder -o ./output
+
+# Riwayat
+melody history show
+
+# Konfigurasi
+melody config show
+melody config set quality=320
+melody config set output_dir=D:/Musik
+
+# Laporkan bug (buka GitHub Issues otomatis)
+melody report
+```
 
 ---
 
 ## Fitur
 
-- **Interactive wizard** — navigasi arrow keys, tidak perlu hafal command apapun
-- **Queue system** — kumpulkan lagu dari beberapa pencarian, download sekaligus
-- **Cari YouTube** langsung dari terminal
-- **Support YouTube Music URLs** (`music.youtube.com`) — otomatis dikonversi
-- **Auto-fallback DRM** — jika video protected, otomatis coba versi lain
-- **Download playlist** sekaligus
-- **History & dedup** — tidak download ulang lagu yang sama
-- **Config permanen** — kualitas, folder output, sample rate
-- **Kompatibel music box** — 44100 Hz, libmp3lame, stereo
-
----
-
-## Penggunaan
-
-### Mode interaktif (direkomendasikan)
-
-```bash
-melody
-```
-
-Jalankan `melody`, navigasi ↑↓, pilih Enter. Tidak perlu hafal apapun.
-
-**Alur queue — kumpulkan dulu, download sekaligus:**
-
-```
-melody
-  → Cari lagu di YouTube  →  pilih  →  Tambah ke antrian
-  → Cari lagu di YouTube  →  pilih  →  Tambah ke antrian
-  → Download antrian  (proses semua sekaligus)
-```
-
-### Mode CLI
-
-```bash
-# Download satu lagu atau playlist
-melody get "https://youtu.be/..."
-melody get "https://youtube.com/playlist?list=..." -o ~/Music -q 320
-
-# Cari YouTube
-melody search query "bohemian rhapsody"
-
-# Konversi file audio lokal
-melody convert file ./folder -o ./output
-
-# Riwayat download
-melody history show
-
-# Konfigurasi
-melody config show
-melody config show --set quality=320
-melody config show --set output_dir=D:/Musik
-```
+| | |
+|---|---|
+| **Zero setup** | FFmpeg diunduh otomatis jika belum ada di sistem |
+| **Interactive wizard** | Navigasi arrow keys, tidak perlu hafal command |
+| **Queue system** | Kumpulkan dari beberapa pencarian, download sekaligus |
+| **YouTube Music** | URL `music.youtube.com` otomatis dikonversi |
+| **Auto-fallback DRM** | Video protected? melody coba versi alternatif |
+| **History & dedup** | Tidak download ulang lagu yang sudah ada |
+| **Playlist** | Download seluruh playlist sekaligus |
+| **Config permanen** | Kualitas, folder output, sample rate tersimpan |
+| **Bug reporter** | `melody report` langsung buka GitHub Issues dengan info sistem |
 
 ---
 
 ## Konfigurasi
 
-Tersimpan di `%APPDATA%\melody\config.toml` (Windows) / `~/.config/melody/config.toml` (Linux/macOS).
+Tersimpan otomatis di:
+- Windows: `%APPDATA%\melody\config.toml`
+- Linux/macOS: `~/.config/melody/config.toml`
 
 | Key | Default | Keterangan |
 |---|---|---|
-| `output_dir` | `~/Music` | Folder default download |
-| `quality` | `192` | Bitrate MP3: 128 / 192 / 256 / 320 kbps |
-| `skip_history` | `true` | Skip otomatis jika sudah pernah didownload |
-| `sample_rate` | `44100` | Hz — kompatibel portable music player |
+| `output_dir` | `~/Music` | Folder tujuan download |
+| `quality` | `192` | Bitrate MP3: `128` / `192` / `256` / `320` kbps |
+| `skip_history` | `true` | Lewati otomatis jika sudah pernah didownload |
+| `sample_rate` | `44100` | Hz — kompatibel dengan portable music player |
 
 ---
 
-## Development
+## Contributing
 
-```bash
-git clone https://github.com/0xAre/melody-cli
-cd melody-cli
-pip install -e ".[dev]"
-pytest tests/ -v
-```
+Lihat [CONTRIBUTING.md](CONTRIBUTING.md) untuk panduan setup dev dan cara membuat PR.
+
+Bug? Jalankan `melody report` atau buka [issue di sini](https://github.com/0xAre/melody-cli/issues/new?template=bug_report.md).
 
 ---
 
