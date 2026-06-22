@@ -20,6 +20,7 @@ class DownloadResult:
     output_path: str = ""
     quality: str = ""
     skipped: bool = False
+    drm: bool = False       # True = video terenkripsi DRM, tidak bisa didownload
     error: str = ""
 
 
@@ -153,20 +154,32 @@ def download_one(
 
     except yt_dlp.utils.DownloadError as e:
         msg = str(e)
-        # Terjemahkan error umum ke pesan yang lebih actionable
+
+        # DRM — video terenkripsi, tidak bisa didownload sama sekali
+        if "DRM" in msg or "drm" in msg.lower():
+            if progress and task_id is not None:
+                progress.update(task_id, description="[yellow]⊘ DRM[/yellow]")
+            return DownloadResult(
+                success=False, drm=True, url=url,
+                error="Video ini DRM protected (terenkripsi) — tidak bisa didownload.\n"
+                      "  Coba cari versi lain: lyric video, cover, atau official audio.",
+            )
+
+        # 403 — YouTube memblokir request
         if "403" in msg or "Forbidden" in msg:
             msg = (
                 "HTTP 403 Forbidden — YouTube memblokir request.\n"
                 "  Fix 1: jalankan  melody fix-403  untuk coba otomatis\n"
-                "  Fix 2: set cookies browser via  melody config show --set cookies_browser=chrome"
+                "  Fix 2: melody config show --set cookies_browser=chrome"
             )
         elif "Sign in" in msg or "bot" in msg.lower():
             msg = (
                 "YouTube meminta login / mendeteksi bot.\n"
-                "  Fix: melody config show --set cookies_browser=chrome  (atau firefox/edge)"
+                "  Fix: melody config show --set cookies_browser=chrome"
             )
+
         if progress and task_id is not None:
-            progress.update(task_id, description=f"[red]✗ Error[/red]")
+            progress.update(task_id, description="[red]✗ Error[/red]")
         return DownloadResult(success=False, url=url, error=msg)
 
     except Exception as e:

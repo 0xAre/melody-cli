@@ -1,7 +1,7 @@
 """
 Cari YouTube dari CLI tanpa buka browser.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import yt_dlp
 
@@ -14,6 +14,16 @@ class SearchResult:
     channel: str
     duration_str: str
     url: str
+    # Indikasi kemungkinan DRM berdasarkan metadata (heuristik, tidak 100%)
+    likely_drm: bool = field(default=False)
+
+
+# Channel resmi label rekaman yang sering pakai DRM di YouTube Music
+_DRM_CHANNEL_HINTS = {
+    "youtube music", "vevo", "sony music", "universal music",
+    "warner music", "warner records", "atlantic records", "republic records",
+    "capitol records", "interscope records", "def jam",
+}
 
 
 def _fmt_duration(seconds: int | None) -> str:
@@ -26,12 +36,35 @@ def _fmt_duration(seconds: int | None) -> str:
     return f"{m}:{s:02}"
 
 
+def _is_likely_drm(entry: dict) -> bool:
+    """
+    Heuristik ringan untuk deteksi kemungkinan DRM.
+    Tidak 100% akurat — hanya sebagai indikasi awal di UI.
+    """
+    channel = (entry.get("channel") or entry.get("uploader") or "").lower()
+
+    # URL YouTube Music
+    url = entry.get("url") or entry.get("webpage_url") or ""
+    if "music.youtube.com" in url:
+        return True
+
+    # Channel label rekaman besar — sering DRM
+    for hint in _DRM_CHANNEL_HINTS:
+        if hint in channel:
+            return True
+
+    return False
+
+
 def search_youtube(query: str, max_results: int = 10) -> list[SearchResult]:
     """
     Cari YouTube dengan ytsearch, kembalikan list SearchResult.
     Tidak melakukan download sama sekali.
+    Hasil diurutkan: non-DRM duluan.
     """
-    search_url = f"ytsearch{max_results}:{query}"
+    # Minta lebih banyak dari yang diminta supaya ada buffer setelah filter
+    fetch = max(max_results + 5, 15)
+    search_url = f"ytsearch{fetch}:{query}"
 
     opts = {
         "quiet": True,
@@ -40,27 +73,38 @@ def search_youtube(query: str, max_results: int = 10) -> list[SearchResult]:
         "skip_download": True,
     }
 
-    results: list[SearchResult] = []
+    raw: list[SearchResult] = []
 
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(search_url, download=False)
 
     if not info or "entries" not in info:
-        return results
+        return raw
 
-    for i, entry in enumerate(info["entries"], 1):
+    for entry in info["entries"]:
         if not entry:
             continue
         vid_id = entry.get("id", "")
-        results.append(
+        url = entry.get("url") or f"https://www.youtube.com/watch?v={vid_id}"
+        raw.append(
             SearchResult(
-                index=i,
+                index=0,          # di-assign ulang setelah sort
                 video_id=vid_id,
                 title=entry.get("title", "Unknown"),
                 channel=entry.get("channel") or entry.get("uploader", "Unknown"),
                 duration_str=_fmt_duration(entry.get("duration")),
-                url=entry.get("url") or f"https://www.youtube.com/watch?v={vid_id}",
+                url=url,
+                likely_drm=_is_likely_drm(entry),
             )
         )
+
+    # Non-DRM duluan, DRM di bawah
+    raw.sort(key=lambda r: r.likely_drm)
+
+    # Assign ulang nomor urut dan potong sesuai max_results
+    results = []
+    for i, r in enumerate(raw[:max_results], 1):
+        r.index = i
+        results.append(r)
 
     return results

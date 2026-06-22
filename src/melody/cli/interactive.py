@@ -214,6 +214,41 @@ def flow_batch() -> None:
     )
 
 
+def _try_drm_fallback(failed_item, all_results: dict, selected: list, out_dir, quality, skip) -> None:
+    """Kalau video DRM, coba video lain dari hasil search yang belum dipilih."""
+    from melody.core.downloader import download_one
+
+    selected_ids = {s.video_id for s in selected}
+    candidates = [
+        r for r in all_results.values()
+        if r.video_id not in selected_ids and r.video_id != failed_item.video_id
+    ]
+
+    if not candidates:
+        console.print("  [dim]Tidak ada alternatif di hasil search ini.[/dim]")
+        console.print("  [dim]Tip: cari ulang dengan tambahkan 'lirik' atau 'official audio'[/dim]")
+        return
+
+    for alt in candidates:
+        console.print(f"  [dim]  → mencoba:[/dim] {alt.title[:55]}")
+        r = download_one(alt.url, out_dir, quality, skip_history=skip)
+        if r.drm:
+            console.print(f"  [yellow]  ⊘ DRM juga, skip...[/yellow]")
+            continue
+        if r.skipped:
+            _result_skip()
+            return
+        if r.success:
+            _result_ok(r.title, out_dir)
+            return
+        # Error lain, stop
+        _result_fail(r.error)
+        return
+
+    console.print("  [yellow]Semua alternatif juga DRM protected.[/yellow]")
+    console.print("  [dim]Tip: paste URL YouTube langsung dari browser[/dim]")
+
+
 def flow_search() -> None:
     from melody.core.downloader import download_one
     from melody.core.searcher import search_youtube
@@ -230,6 +265,8 @@ def flow_search() -> None:
         console.print("  [yellow]Tidak ada hasil ditemukan[/yellow]")
         return
 
+    has_drm_hint = any(r.likely_drm for r in results)
+
     # Tampilkan tabel hasil sebelum checkbox
     t = Table(show_header=True, header_style="bold cyan", border_style="dim", box=None)
     t.add_column("#", width=3, justify="right", style="dim")
@@ -237,15 +274,19 @@ def flow_search() -> None:
     t.add_column("Channel", style="dim")
     t.add_column("Durasi", justify="right", style="dim", width=7)
     for r in results:
-        t.add_row(str(r.index), r.title[:55], r.channel[:25], r.duration_str)
+        drm_tag = " [yellow][DRM?][/yellow]" if r.likely_drm else ""
+        t.add_row(str(r.index), f"{r.title[:50]}{drm_tag}", r.channel[:25], r.duration_str)
     console.print()
     console.print(t)
+    if has_drm_hint:
+        console.print("  [dim yellow][DRM?] = kemungkinan terenkripsi, melody otomatis cari alternatif[/dim yellow]")
     console.print()
 
     # Checkbox pilih yang mau didownload
     choices = [
         questionary.Choice(
-            f"{r.index:2}. {r.title[:52]}  ({r.duration_str})",
+            f"{r.index:2}. {r.title[:48]}  ({r.duration_str})"
+            + ("  [DRM?]" if r.likely_drm else ""),
             value=r,
         )
         for r in results
@@ -272,15 +313,23 @@ def flow_search() -> None:
         return
 
     skip = cfg.get("skip_history", True)
+
+    # Buat index hasil search untuk fallback DRM
+    all_results_by_idx = {r.index: r for r in results}
     console.print()
 
     for item in selected:
         console.print(f"  [cyan]↓[/cyan] {item.title}")
         r = download_one(item.url, out_dir, quality, skip_history=skip)
+
         if r.skipped:
             _result_skip()
         elif r.success:
             _result_ok(r.title, out_dir)
+        elif r.drm:
+            # Auto-coba video berikutnya dari hasil search yang tidak dipilih
+            console.print(f"  [yellow]⊘ DRM protected — otomatis coba alternatif...[/yellow]")
+            _try_drm_fallback(item, all_results_by_idx, selected, out_dir, quality, skip)
         else:
             _result_fail(r.error)
 
