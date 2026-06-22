@@ -38,10 +38,10 @@ def _build_ydl_opts(output_dir: Path, quality: str, hooks: list) -> dict[str, An
     cookies_browser = cfg.get("cookies_browser", "")
 
     opts: dict[str, Any] = {
-        # iOS client: paling stabil, jarang kena 403 dari YouTube
+        # Android client: stabil, tidak return FairPlay DRM seperti iOS client
         "extractor_args": {
             "youtube": {
-                "player_client": ["ios", "web"],
+                "player_client": ["android", "web"],
             }
         },
         "format": "bestaudio/best",
@@ -64,13 +64,6 @@ def _build_ydl_opts(output_dir: Path, quality: str, hooks: list) -> dict[str, An
         "concurrent_fragment_downloads": 4,
         "retries": 10,
         "fragment_retries": 10,
-        "http_headers": {
-            "User-Agent": (
-                "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
-                "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 "
-                "Mobile/15E148 Safari/604.1"
-            ),
-        },
         "quiet": True,
         "no_warnings": True,
         "ignoreerrors": False,

@@ -54,7 +54,7 @@ def cmd_fix_403() -> None:
             "quiet": True,
             "no_warnings": True,
             "skip_download": True,
-            "extractor_args": {"youtube": {"player_client": ["ios"]}},
+            "extractor_args": {"youtube": {"player_client": ["android", "web"]}},
         }
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(test_url, download=False)
